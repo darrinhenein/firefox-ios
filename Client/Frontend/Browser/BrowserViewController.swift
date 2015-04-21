@@ -27,6 +27,7 @@ class BrowserViewController: UIViewController {
     private var screenshotHelper: ScreenshotHelper!
     private var homePanelIsInline = false
     private var searchLoader: SearchLoader!
+    private var transitionManager = TransitionManager()
 
     var profile: Profile!
 
@@ -330,7 +331,7 @@ extension BrowserViewController: URLBarDelegate {
         let controller = TabTrayController()
         controller.profile = profile
         controller.tabManager = tabManager
-        controller.transitioningDelegate = self
+        controller.transitioningDelegate = self.transitionManager
         controller.modalPresentationStyle = .Custom
         controller.screenshotHelper = screenshotHelper
         presentViewController(controller, animated: true, completion: nil)
@@ -704,6 +705,23 @@ extension BrowserViewController: UIScrollViewDelegate {
                     tab.webView.scrollView.scrollIndicatorInsets = tab.webView.scrollView.contentInset
                 }
 
+                let webviewTop = inset.top + offset.y
+                if webviewTop < 0 {
+                    if !transitionManager.interactive {
+                        let controller = TabTrayController()
+                        controller.profile = profile
+                        controller.tabManager = tabManager
+                        controller.transitioningDelegate = self.transitionManager
+                        controller.modalPresentationStyle = .Custom
+                        controller.screenshotHelper = screenshotHelper
+                        transitionManager.interactive = true
+                        presentViewController(controller, animated: true, completion: nil)
+                    }
+
+                    self.transitionManager.handleScroll(scrollView.panGestureRecognizer)
+
+                }
+
                 // Adjust the urlbar, reader bar, and toolbar by the change in the contentInset
                 scrollUrlBar(tab.webView.scrollView.contentInset.top - inset.top)
                 scrollReaderModeBar(tab.webView.scrollView.contentInset.top - inset.top)
@@ -727,6 +745,9 @@ extension BrowserViewController: UIScrollViewDelegate {
         } else {
             hideToolbars(animated: true)
         }
+
+        self.transitionManager.handleScroll(scrollView.panGestureRecognizer)
+
     }
 
     func scrollViewDidScrollToTop(scrollView: UIScrollView) {
@@ -1163,16 +1184,6 @@ extension BrowserViewController: LongPressDelegate {
         }
         
         self.presentViewController(actionSheetController, animated: true, completion: nil)
-    }
-}
-
-extension BrowserViewController : UIViewControllerTransitioningDelegate {
-    func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return TransitionManager(show: false)
-    }
-
-    func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return TransitionManager(show: true)
     }
 }
 

@@ -20,10 +20,13 @@ protocol Transitionable : class {
 }
 
 @objc
-class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning  {
-    private let show: Bool
-    init(show: Bool) {
-        self.show = show
+class TransitionManager: UIPercentDrivenInteractiveTransition, UIViewControllerAnimatedTransitioning, UIViewControllerInteractiveTransitioning, UIViewControllerTransitioningDelegate {
+
+    var show = false
+    var interactive = false
+
+    override init() {
+        super.init()
     }
 
     func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
@@ -54,12 +57,73 @@ class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning  {
                         to.transitionableWillShow(to, options: options)
                         from.transitionableWillHide(from, options: options)
                     }, completion: { finished in
-                        to.transitionableWillComplete(to, options: options)
-                        from.transitionableWillComplete(from, options: options)
-                        transitionContext.completeTransition(true)
+                        if(transitionContext.transitionWasCancelled()){
+                            println("transition cancelled")
+                            transitionContext.completeTransition(false)
+                        }
+                        else {
+                            println("transition completed")
+                            to.transitionableWillComplete(to, options: options)
+                            from.transitionableWillComplete(from, options: options)
+                            transitionContext.completeTransition(true)
+                        }
+                        self.interactive = false
                 })
 
             }
+        }
+    }
+
+    func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        self.show = false
+        return self
+    }
+
+    func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        self.show = true
+        return self
+    }
+
+    func interactionControllerForPresentation(animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        // if our interactive flag is true, return the transition manager object
+        // otherwise return nil
+        return self.interactive ? self : nil
+    }
+
+    func interactionControllerForDismissal(animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return self.interactive ? self : nil
+    }
+
+
+    func handleScroll(pan: UIPanGestureRecognizer){
+
+        let translation = pan.translationInView(pan.view!)
+
+        let d =  translation.y / (CGRectGetHeight(pan.view!.bounds))
+
+        switch (pan.state) {
+
+        case .Began:
+            // set our interactive flag to true
+//            self.interactive = true
+
+            // trigger the start of the transition
+//            self.sourceViewController.performSegueWithIdentifier("presentMenu", sender: self)
+            break
+
+        case .Changed:
+            println("changed:", d)
+            self.updateInteractiveTransition(d)
+            break
+
+        default: // .Ended, .Cancelled, .Failed ...
+            println("default:", d)
+            if d < 0.5 {
+                self.cancelInteractiveTransition()
+            } else {
+                self.finishInteractiveTransition()
+            }
+
         }
     }
 
