@@ -49,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         controller.restorationClass = AppDelegate.self
 
         self.window!.rootViewController = controller
-        self.window!.backgroundColor = UIColor(red: 0.21, green: 0.23, blue: 0.25, alpha: 1)
+        self.window!.backgroundColor = AppConstants.BackgroundColor
 
         NSNotificationCenter.defaultCenter().addObserverForName(FSReadingListAddReadingListItemNotification, object: nil, queue: nil) { (notification) -> Void in
             if let userInfo = notification.userInfo, url = userInfo["URL"] as? NSURL, absoluteString = url.absoluteString {

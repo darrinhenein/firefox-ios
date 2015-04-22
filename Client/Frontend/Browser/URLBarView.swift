@@ -9,7 +9,7 @@ import SnapKit
 
 private struct URLBarViewUX {
     // The color shown behind the tabs count button, and underneath the (mostly transparent) status bar.
-    static let BackgroundColor = UIColor(red: 0.21, green: 0.23, blue: 0.25, alpha: 1)
+    static let BackgroundColor = AppConstants.BackgroundColor
     static let TextFieldBorderColor = UIColor.blackColor().colorWithAlphaComponent(0.05)
     static let TextFieldActiveBorderColor = UIColor(rgb: 0x4A90E2)
     static let LocationLeftPadding = 5
@@ -110,6 +110,7 @@ class URLBarView: UIView, BrowserLocationViewDelegate, AutocompleteTextFieldDele
         tabsButton = InsetButton()
         tabsButton.setTranslatesAutoresizingMaskIntoConstraints(false)
         tabsButton.setTitleColor(URLBarViewUX.BackgroundColor, forState: UIControlState.Normal)
+
         tabsButton.accessibilityLabel = NSLocalizedString("Show Tabs", comment: "Accessibility Label for the urlbar tabs button")
         tabsButton.titleLabel?.layer.backgroundColor = UIColor.whiteColor().CGColor
         tabsButton.titleLabel?.layer.cornerRadius = 2
